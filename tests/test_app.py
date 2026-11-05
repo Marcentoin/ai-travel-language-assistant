@@ -88,3 +88,32 @@ def test_demo_mode_replays_recorded_answers():
 def test_security_headers():
     headers = client_for().get("/").headers
     assert "default-src 'self'" in headers["Content-Security-Policy"] and headers["X-Content-Type-Options"] == "nosniff"
+
+
+def test_model_client_retries_when_the_provider_is_busy(monkeypatch):
+    import llm
+
+    class Response:
+        def __init__(self, status):
+            self.status_code = status
+
+        def raise_for_status(self):
+            if self.status_code >= 400:
+                raise llm.requests.HTTPError(str(self.status_code))
+
+        def json(self):
+            return {"choices": [{"message": {"content": "ok"}}]}
+
+    statuses = [503, 503, 200]
+    monkeypatch.setattr(llm.requests, "post", lambda *args, **kwargs: Response(statuses.pop(0)))
+    monkeypatch.setattr(llm.time, "sleep", lambda seconds: None)
+    client = llm.OpenAICompatibleClient("key", "https://example.test/v1", "model")
+    assert client.complete([{"role": "user", "content": "hi"}]) == "ok"
+
+    statuses[:] = [503, 503, 503]
+    try:
+        client.complete([{"role": "user", "content": "hi"}])
+    except llm.LLMError as exc:
+        assert "busy" in str(exc)
+    else:
+        raise AssertionError("a busy provider must raise LLMError")
