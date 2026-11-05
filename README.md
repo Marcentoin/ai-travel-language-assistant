@@ -26,8 +26,8 @@ pronunciation guide, a usage note and audio.
   full screen to a local, copy, save.
 - **Saved** phrases stay on the device. Voice input for the chat (Chrome, Edge).
 - **Clear layout**: side navigation on a computer, bottom tabs and a settings sheet on a phone, dark mode.
-- **Reliable output**: JSON schema in the prompt, validation of every field, one automatic retry,
-  prompt-injection guard, rate limit and security headers.
+- **Reliable output**: JSON schema in the prompt, validation of every field, one automatic retry for an
+  unusable answer and two for a busy model, prompt-injection guard, rate limit and security headers.
 
 ## How it works
 
@@ -120,9 +120,9 @@ pip install -r requirements-dev.txt
 python -m pytest
 ```
 
-41 tests with a fake model and fake location services: request validation, prompts, answer parsing and
+42 tests with a fake model and fake location services: request validation, prompts, answer parsing and
 retry, script checks, location → languages, GPS and connection-based location, API routes, rate limit,
-demo mode and security headers.
+demo mode, security headers and retries when the model is busy.
 
 ## Project structure
 

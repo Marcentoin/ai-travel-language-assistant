@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import os
+import time
 from pathlib import Path
 
 import requests
@@ -34,27 +35,49 @@ def load_dotenv(path: str | Path = Path(__file__).with_name(".env")) -> None:
 
 
 class OpenAICompatibleClient:
-    def __init__(self, api_key: str, base_url: str, model: str, temperature: float = 0.3, timeout: int = 60):
+    RETRY_STATUS = {429, 500, 502, 503, 504}  # busy or temporarily unavailable: worth trying again
+    BUSY = {429: "The model's request quota is used up for now (429). Wait a minute, then try again.",
+            503: "The model is busy right now (503). Please try again in a few seconds."}
+
+    def __init__(self, api_key: str, base_url: str, model: str, temperature: float = 0.3, timeout: int = 60,
+                 retries: int = 2, backoff: float = 1.5):
         self.api_key = api_key
         self.base_url = base_url.rstrip("/")
         self.model = model
         self.temperature = temperature
         self.timeout = timeout
+        self.retries = retries
+        self.backoff = backoff
         self.name = model
 
     def complete(self, messages: list[dict]) -> str:
+        for attempt in range(self.retries + 1):
+            last = attempt == self.retries
+            try:
+                response = requests.post(
+                    f"{self.base_url}/chat/completions",
+                    headers={"Authorization": f"Bearer {self.api_key}"},
+                    json={"model": self.model, "messages": messages, "temperature": self.temperature},
+                    timeout=self.timeout,
+                )
+            except requests.Timeout as exc:  # already waited `timeout` seconds: do not make the traveller wait more
+                raise LLMError("The language model did not answer in time. Please try again.") from exc
+            except requests.ConnectionError as exc:
+                if last:
+                    raise LLMError(f"Could not reach the language model: {exc}") from exc
+            else:
+                if response.status_code not in self.RETRY_STATUS:
+                    break
+                if last:
+                    raise LLMError(self.BUSY.get(response.status_code,
+                                                 f"The model is temporarily unavailable ({response.status_code}). Please try again."))
+            time.sleep(self.backoff * (attempt + 1))  # wait 1.5 s, then 3 s
         try:
-            response = requests.post(
-                f"{self.base_url}/chat/completions",
-                headers={"Authorization": f"Bearer {self.api_key}"},
-                json={"model": self.model, "messages": messages, "temperature": self.temperature},
-                timeout=self.timeout,
-            )
             response.raise_for_status()
             return response.json()["choices"][0]["message"]["content"]
         except requests.RequestException as exc:
-            raise LLMError(f"Could not reach the language model: {exc}") from exc
-        except (KeyError, IndexError, ValueError) as exc:
+            raise LLMError(f"The language model refused the request: {exc}") from exc
+        except (KeyError, IndexError, TypeError, ValueError) as exc:
             raise LLMError("Unexpected answer format from the language model API.") from exc
 
 
