@@ -11,6 +11,8 @@ BOLZANO = {"address": {"county": "South Tyrol", "state": "Trentino – Alto Adig
 
 
 class FakeResponse:
+    ok = True
+
     def __init__(self, data):
         self.data = data
 
@@ -55,3 +57,29 @@ def test_failures_raise_geo_error(monkeypatch, failure):
     monkeypatch.setattr(geo.requests, "get", fake_get)
     with pytest.raises(geo.GeoError):
         geo.reverse_geocode(0, -30)
+
+
+def test_ip_location_falls_back_to_the_second_service(monkeypatch):
+    calls = []
+
+    def fake_get(url, headers, timeout):
+        calls.append(url)
+        if "ipinfo" in url:
+            raise requests.Timeout("slow")
+        return FakeResponse({"country_code": "in", "region": "Tamil Nadu"})
+
+    monkeypatch.setattr(geo.requests, "get", fake_get)
+    assert geo.locate_ip("127.0.0.1") == ("IN", "Tamil Nadu", "Tamil Nadu")
+    assert calls == ["https://ipinfo.io/json", "https://ipapi.co/json/"]  # a private address is not sent
+
+
+def test_ip_location_of_a_public_address(monkeypatch):
+    seen = []
+    monkeypatch.setattr(geo.requests, "get", lambda url, **kwargs: seen.append(url) or FakeResponse({"country": "JP", "region": "Tokyo"}))
+    assert geo.locate_ip("8.8.8.8")[:2] == ("JP", "Tokyo") and seen == ["https://ipinfo.io/8.8.8.8/json"]
+
+
+def test_ip_location_failure(monkeypatch):
+    monkeypatch.setattr(geo.requests, "get", lambda url, **kwargs: FakeResponse({"error": "rate limited"}))
+    with pytest.raises(geo.GeoError):
+        geo.locate_ip("")

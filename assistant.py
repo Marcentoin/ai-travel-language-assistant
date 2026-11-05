@@ -104,7 +104,7 @@ class PhraseRequest:
     @classmethod
     def from_dict(cls, data: dict) -> "PhraseRequest":
         topic = TOPICS.get(str(data.get("topic") or ""))
-        situation = clean(topic[2] if topic else data.get("situation"))
+        situation = clean(topic[1] if topic else data.get("situation"))
         raw_count = data.get("count")
         try:
             count = int(raw_count) if raw_count not in (None, "") else (8 if topic else 6)

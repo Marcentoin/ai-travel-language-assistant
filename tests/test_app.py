@@ -5,8 +5,10 @@ from geo import GeoError
 from llm import DemoClient
 
 
-def client_for(*answers, geocoder=None):
-    app = create_app(FakeClient(*answers), geocoder=geocoder or (lambda lat, lon: ("IN", "Tamil Nadu", "Tamil Nadu, Coimbatore")))
+def client_for(*answers, geocoder=None, ip_locator=None):
+    app = create_app(FakeClient(*answers),
+                     geocoder=geocoder or (lambda lat, lon: ("IN", "Tamil Nadu", "Tamil Nadu, Coimbatore")),
+                     ip_locator=ip_locator or (lambda ip: ("ES", "Catalonia", "Catalonia")))
     return app.test_client()
 
 
@@ -53,7 +55,12 @@ def test_unusable_model_output_is_a_502():
 
 def test_locate_returns_the_local_languages():
     data = client_for().post("/api/locate", json={"lat": 11.0, "lon": 76.96}).get_json()
-    assert data["place"] == "Tamil Nadu, India" and data["languages"][0] == "Tamil"
+    assert data["place"] == "Tamil Nadu, India" and data["languages"][0] == "Tamil" and data["approximate"] is False
+
+
+def test_locate_without_gps_uses_the_internet_connection():
+    data = client_for().post("/api/locate", json={}).get_json()
+    assert data["place"] == "Catalonia, Spain" and data["languages"][0] == "Catalan" and data["approximate"] is True
 
 
 def test_locate_errors():

@@ -7,15 +7,16 @@ A travel chatbot that knows where you are. Describe your situation in English an
 phrases to say in the local language, each with the native script, a romanization, an easy
 pronunciation guide, a usage note and audio.
 
-![Chat, essentials and phrasebook on a phone, with real Gemini 3.6 Flash answers for Tamil Nadu](results/screenshot.webp)
+![Chat on a computer and phrasebook on a phone, with real Gemini 3.6 Flash answers for Tamil Nadu](results/screenshot.webp)
 
 ## Features
 
 - **Chat**: describe a situation or ask what to say ("How do I ask for the bill?", "What does இல்லை mean?").
   Follow-up questions keep the context ("say it more politely").
-- **Knows where you are**: tap 📍 *Locate me* or choose a country. The local languages are proposed, the
-  region's own language first (Tamil Nadu → Tamil, Catalonia → Catalan, Québec → French, KwaZulu-Natal → Zulu),
-  and answers use the local variety, customs and currency.
+- **Knows where you are**: on the first visit the country and region are guessed from the internet connection;
+  *Locate me* uses the GPS position when the browser allows it, and falls back to the connection otherwise.
+  The local languages are proposed, the region's own language first (Tamil Nadu → Tamil, Catalonia → Catalan,
+  Québec → French, KwaZulu-Natal → Zulu), and answers use the local variety, customs and currency.
 - **165 languages, 212 countries and territories**, including the regional languages of India, Spain,
   Switzerland, Belgium, Canada, Pakistan, Nigeria, South Africa and others.
 - **Essentials**: 23 basic phrases (greetings, understanding each other, getting by, numbers, emergencies).
@@ -23,7 +24,8 @@ pronunciation guide, a usage note and audio.
   money, small talk, sightseeing, airport, phone) or any situation you type.
 - **On every phrase**: listen (normal or slow, with the local accent when a voice is installed), show it
   full screen to a local, copy, save.
-- **Saved** phrases stay on the device. Voice input for the chat (Chrome, Edge). Mobile-first, dark mode.
+- **Saved** phrases stay on the device. Voice input for the chat (Chrome, Edge).
+- **Clear layout**: side navigation on a computer, bottom tabs and a settings sheet on a phone, dark mode.
 - **Reliable output**: JSON schema in the prompt, validation of every field, one automatic retry,
   prompt-injection guard, rate limit and security headers.
 
@@ -36,7 +38,7 @@ Browser: chat, tabs, audio, saved phrases (templates/, static/)
 app.py        Flask routes: /api/chat  /api/phrases  /api/essentials  /api/locate  /api/config
    ├── assistant.py  prompts, request validation, answer parsing, retry
    ├── catalog.py    languages, countries → local languages, essentials, topics (data/*.json)
-   ├── geo.py        GPS position → country and region (OpenStreetMap Nominatim)
+   ├── geo.py        GPS position or internet connection → country and region (Nominatim, ipinfo.io)
    └── llm.py        Gemini or any OpenAI-compatible API (OpenAI, Groq, Ollama…), offline demo client
 ```
 
@@ -76,7 +78,7 @@ docker run -p 5000:5000 --env-file .env travel-language-assistant
 | Method | Path | Body | Answer |
 |---|---|---|---|
 | GET | `/api/config` | | languages, countries, topics, essentials |
-| POST | `/api/locate` | `lat`, `lon` | `country`, `region`, `place`, `languages` (most useful first) |
+| POST | `/api/locate` | `lat`, `lon` (or nothing: approximate location from the connection) | `country`, `region`, `place`, `languages` (most useful first), `approximate` |
 | POST | `/api/chat` | `message`, `history`, `language`, `politeness`, `country`, `region` | `reply`, `phrases`, `tips` |
 | POST | `/api/phrases` | `situation` or `topic`, `count`, `language`, `politeness`, `country`, `region` | `title`, `phrases`, `tips` |
 | POST | `/api/essentials` | `language`, `politeness`, `country`, `region` | the 23 essential `phrases` |
@@ -118,8 +120,9 @@ pip install -r requirements-dev.txt
 python -m pytest
 ```
 
-37 tests with a fake model and a fake geocoder: request validation, prompts, answer parsing and
-retry, script checks, location → languages, API routes, rate limit, demo mode and security headers.
+41 tests with a fake model and fake location services: request validation, prompts, answer parsing and
+retry, script checks, location → languages, GPS and connection-based location, API routes, rate limit,
+demo mode and security headers.
 
 ## Project structure
 
@@ -127,7 +130,7 @@ retry, script checks, location → languages, API routes, rate limit, demo mode 
 app.py               Flask routes, rate limit, security headers
 assistant.py         prompts, request validation, answer parsing, retry
 catalog.py           languages, countries → local languages, essentials, topics
-geo.py               reverse geocoding with OpenStreetMap Nominatim
+geo.py               location: OpenStreetMap Nominatim (GPS) and ipinfo.io / ipapi.co (connection)
 llm.py               OpenAI-compatible client and offline demo client
 evaluate.py          10-language benchmark
 data/                languages.json (165 languages), countries.json (212 countries and territories)
@@ -138,10 +141,13 @@ results/             evaluation results, live check, screenshots
 
 ## Privacy and limitations
 
-- The position is used only when you tap *Locate me*: it is rounded to about 100 m and sent once to
-  OpenStreetMap Nominatim to find the country and region. Nothing is stored on the server.
+- On the first visit the server asks ipinfo.io (or ipapi.co) for the approximate country of the internet
+  connection. The GPS position is used only when you tap *Locate me*: it is rounded to about 100 m and sent
+  once to OpenStreetMap Nominatim. Nothing is stored on the server.
 - Settings and saved phrases stay in the browser (localStorage).
 - Phrases are generated by a language model and can be wrong, especially in less-resourced languages:
   check anything important (allergies, medicine) with a local.
 - Audio depends on the voices installed on the device; Microsoft Edge offers the most.
 - The free Gemini tier has daily quotas.
+
+Icons: [Lucide](https://lucide.dev) (ISC licence).

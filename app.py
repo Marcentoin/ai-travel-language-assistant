@@ -11,7 +11,7 @@ from flask import Flask, jsonify, render_template, request
 
 from assistant import ChatRequest, PhraseRequest, Settings, TravelLanguageAssistant
 from catalog import COUNTRIES, ESSENTIALS, LANGUAGES, TOPICS, local_languages, place_name
-from geo import GeoError, reverse_geocode
+from geo import GeoError, locate_ip, reverse_geocode
 from llm import DemoClient, LLMError, get_client
 
 # Some Windows registries map .js to text/plain, which browsers refuse to run with "nosniff".
@@ -43,7 +43,7 @@ class RateLimiter:
         return True
 
 
-def create_app(client=None, geocoder=reverse_geocode) -> Flask:
+def create_app(client=None, geocoder=reverse_geocode, ip_locator=locate_ip) -> Flask:
     app = Flask(__name__)
     app.json.ensure_ascii = False  # keep native scripts readable in the JSON API
     assistant = TravelLanguageAssistant(client or get_client())
@@ -85,7 +85,7 @@ def create_app(client=None, geocoder=reverse_geocode) -> Flask:
         return jsonify(
             languages={name: info["code"] for name, info in LANGUAGES.items()},
             countries={code: {"name": c["name"], "languages": c["languages"]} for code, c in COUNTRIES.items()},
-            topics=[{"id": key, "icon": icon, "label": label} for key, (icon, label, _) in TOPICS.items()],
+            topics=[{"id": key, "label": label} for key, (label, _) in TOPICS.items()],
             essentials=[{"title": title, "phrases": phrases} for title, phrases in ESSENTIALS.items()],  # ordered
             model=assistant.client.name,
             demo=demo,
@@ -95,21 +95,25 @@ def create_app(client=None, geocoder=reverse_geocode) -> Flask:
     def locate():
         if refused := too_many_requests():
             return refused
-        data = request.get_json(silent=True) or {}
+        data = request.get_json(silent=True)
+        data = data if isinstance(data, dict) else {}
+        approximate = "lat" not in data  # no GPS position: use the internet connection
         try:
-            lat, lon = float(data["lat"]), float(data["lon"])
-            if not (-90 <= lat <= 90 and -180 <= lon <= 180):
-                raise ValueError
+            if approximate:
+                country, region, area = ip_locator(request.access_route[0] if request.access_route else "")
+            else:
+                lat, lon = float(data["lat"]), float(data["lon"])
+                if not (-90 <= lat <= 90 and -180 <= lon <= 180):
+                    raise ValueError
+                country, region, area = geocoder(lat, lon)
         except (KeyError, TypeError, ValueError):
             return jsonify(error="Invalid coordinates."), 400
-        try:
-            country, region, area = geocoder(lat, lon)
         except GeoError as exc:
             return jsonify(error=str(exc)), 503
         if country not in COUNTRIES:
             return jsonify(error="Your country is not in the list yet. Please choose the closest one."), 404
         return jsonify(country=country, region=region, place=place_name(country, region),
-                       languages=local_languages(country, area))
+                       languages=local_languages(country, area), approximate=approximate)
 
     @app.post("/api/chat")
     def chat():

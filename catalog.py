@@ -22,19 +22,19 @@ ESSENTIALS = {
 }
 ESSENTIAL_PHRASES = [phrase for group in ESSENTIALS.values() for phrase in group]
 
-TOPICS = {  # id -> (icon, label, situation sent to the model)
-    "restaurant": ("🍽️", "Restaurant & food", "Ordering food and drinks at a restaurant, dietary needs and paying the bill"),
-    "transport": ("🚕", "Taxi & transport", "Taking a taxi, bus or train: destination, tickets, price and stops"),
-    "hotel": ("🏨", "Hotel", "Checking in and out of a hotel, asking for things and reporting a problem"),
-    "directions": ("🧭", "Directions", "Asking for directions and understanding simple answers"),
-    "shopping": ("🛍️", "Shopping & markets", "Shopping in stores and markets: sizes, prices and bargaining"),
-    "health": ("💊", "Pharmacy & doctor", "Buying medicine at a pharmacy and describing symptoms to a doctor"),
-    "emergency": ("🚨", "Emergencies", "Emergencies: asking for help, calling the police or an ambulance, reporting a theft"),
-    "money": ("💳", "Money & payments", "Paying by card or cash, exchanging money and using a cash machine"),
-    "social": ("👋", "Small talk", "Introducing yourself, saying where you are from and making friends"),
-    "sightseeing": ("🏛️", "Sightseeing", "Visiting museums and sights: tickets, opening hours and taking photos"),
-    "airport": ("✈️", "Airport", "At the airport: check-in, baggage, security and customs"),
-    "phone": ("📶", "Phone & internet", "Buying a SIM card, asking for the wifi password and charging a phone"),
+TOPICS = {  # id -> (label, situation sent to the model)
+    "restaurant": ("Restaurant & food", "Ordering food and drinks at a restaurant, dietary needs and paying the bill"),
+    "transport": ("Taxi & transport", "Taking a taxi, bus or train: destination, tickets, price and stops"),
+    "hotel": ("Hotel", "Checking in and out of a hotel, asking for things and reporting a problem"),
+    "directions": ("Directions", "Asking for directions and understanding simple answers"),
+    "shopping": ("Shopping & markets", "Shopping in stores and markets: sizes, prices and bargaining"),
+    "health": ("Pharmacy & doctor", "Buying medicine at a pharmacy and describing symptoms to a doctor"),
+    "emergency": ("Emergencies", "Emergencies: asking for help, calling the police or an ambulance, reporting a theft"),
+    "money": ("Money & payments", "Paying by card or cash, exchanging money and using a cash machine"),
+    "social": ("Small talk", "Introducing yourself, saying where you are from and making friends"),
+    "sightseeing": ("Sightseeing", "Visiting museums and sights: tickets, opening hours and taking photos"),
+    "airport": ("Airport", "At the airport: check-in, baggage, security and customs"),
+    "phone": ("Phone & internet", "Buying a SIM card, asking for the wifi password and charging a phone"),
 }
 
 
