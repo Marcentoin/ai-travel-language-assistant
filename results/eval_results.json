@@ -1,0 +1,133 @@
+{
+  "summary_percent": {
+    "valid_json": 100,
+    "complete": 100,
+    "count_ok": 100,
+    "native_script": 100,
+    "latin_romanization": 90,
+    "readable_pronunciation": 100,
+    "tips_ok": 100
+  },
+  "cases": [
+    {
+      "situation": "Ordering food at a ramen restaurant",
+      "language": "Japanese",
+      "latency_s": null,
+      "valid_json": true,
+      "complete": true,
+      "count_ok": true,
+      "native_script": true,
+      "latin_romanization": true,
+      "readable_pronunciation": true,
+      "tips_ok": true
+    },
+    {
+      "situation": "Asking for directions to the train station",
+      "language": "French",
+      "latency_s": null,
+      "valid_json": true,
+      "complete": true,
+      "count_ok": true,
+      "native_script": true,
+      "latin_romanization": true,
+      "readable_pronunciation": true,
+      "tips_ok": true
+    },
+    {
+      "situation": "Checking in at a hotel with a booking",
+      "language": "Spanish",
+      "latency_s": null,
+      "valid_json": true,
+      "complete": true,
+      "count_ok": true,
+      "native_script": true,
+      "latin_romanization": true,
+      "readable_pronunciation": true,
+      "tips_ok": true
+    },
+    {
+      "situation": "Buying a regional train ticket at the counter",
+      "language": "German",
+      "latency_s": null,
+      "valid_json": true,
+      "complete": true,
+      "count_ok": true,
+      "native_script": true,
+      "latin_romanization": true,
+      "readable_pronunciation": true,
+      "tips_ok": true
+    },
+    {
+      "situation": "Buying medicine for a headache at a pharmacy",
+      "language": "Italian",
+      "latency_s": null,
+      "valid_json": true,
+      "complete": true,
+      "count_ok": true,
+      "native_script": true,
+      "latin_romanization": true,
+      "readable_pronunciation": true,
+      "tips_ok": true
+    },
+    {
+      "situation": "Bargaining for a souvenir at a street market",
+      "language": "Hindi",
+      "latency_s": null,
+      "valid_json": true,
+      "complete": true,
+      "count_ok": true,
+      "native_script": true,
+      "latin_romanization": true,
+      "readable_pronunciation": true,
+      "tips_ok": true
+    },
+    {
+      "situation": "Taking an auto-rickshaw to the bus stand",
+      "language": "Tamil",
+      "latency_s": null,
+      "valid_json": true,
+      "complete": true,
+      "count_ok": true,
+      "native_script": true,
+      "latin_romanization": true,
+      "readable_pronunciation": true,
+      "tips_ok": true
+    },
+    {
+      "situation": "Asking for another size in a clothes shop",
+      "language": "Korean",
+      "latency_s": null,
+      "valid_json": true,
+      "complete": true,
+      "count_ok": true,
+      "native_script": true,
+      "latin_romanization": true,
+      "readable_pronunciation": true,
+      "tips_ok": true
+    },
+    {
+      "situation": "Going through customs at the airport",
+      "language": "Mandarin Chinese",
+      "latency_s": null,
+      "valid_json": true,
+      "complete": true,
+      "count_ok": true,
+      "native_script": true,
+      "latin_romanization": true,
+      "readable_pronunciation": true,
+      "tips_ok": true
+    },
+    {
+      "situation": "Reporting a lost passport at the police station",
+      "language": "Thai",
+      "latency_s": null,
+      "valid_json": true,
+      "complete": true,
+      "count_ok": true,
+      "native_script": true,
+      "latin_romanization": false,
+      "readable_pronunciation": true,
+      "tips_ok": true
+    }
+  ]
+}

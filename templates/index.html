@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Travel Language Assistant</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header>
+    <h1>AI Travel Language Assistant</h1>
+    <p>Describe a travel situation and get the phrases you need, with translations and pronunciation.</p>
+    <span class="badge">Model: {{ model }}</span>
+    {% if demo %}<p class="notice">Demo mode: recorded answers, one per language. Set <code>LLM_API_KEY</code> for live answers.</p>{% endif %}
+  </header>
+
+  <main>
+    <form id="form">
+      <label for="situation">Travel situation</label>
+      <textarea id="situation" name="situation" maxlength="300" rows="2" required
+                placeholder="e.g. Ordering vegetarian food at a small restaurant"></textarea>
+      <div class="chips">
+        {% for example in examples %}<button type="button" class="chip">{{ example }}</button>{% endfor %}
+      </div>
+      <div class="row">
+        <label>Language
+          <select name="language">
+            {% for name in languages %}<option{% if name == "Japanese" %} selected{% endif %}>{{ name }}</option>{% endfor %}
+          </select>
+        </label>
+        <label>Politeness
+          <select name="politeness"><option>casual</option><option selected>polite</option><option>formal</option></select>
+        </label>
+        <label>Phrases
+          <input type="number" name="count" min="3" max="10" value="6">
+        </label>
+      </div>
+      <button type="submit" class="primary">Get phrases</button>
+    </form>
+
+    <p id="status" role="status"></p>
+
+    <section id="results" hidden>
+      <h2 id="title"></h2>
+      <ol id="phrases"></ol>
+      <h3>Cultural tips</h3>
+      <ul id="tips"></ul>
+    </section>
+  </main>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
