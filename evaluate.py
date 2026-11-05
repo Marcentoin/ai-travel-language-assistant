@@ -12,7 +12,8 @@ import json
 import time
 from pathlib import Path
 
-from assistant import LANGUAGES, PhraseRequest, build_messages, is_latin, parse_phrasebook, uses_native_script
+from assistant import PhraseRequest, build_messages, is_latin, parse_phrasebook, uses_native_script
+from catalog import LANGUAGES
 from llm import DemoClient, get_client
 
 BENCHMARK = [
@@ -44,7 +45,7 @@ def score(raw: str, req: PhraseRequest) -> dict:
         book = parse_phrasebook(raw, req)
     except ValueError:
         return {metric: False for metric in METRICS}
-    non_latin = LANGUAGES[req.language][1] is not None
+    non_latin = LANGUAGES[req.language]["script"] != ["LATIN"]
     return {
         "valid_json": True,
         "complete": all(p.english and p.translation and p.pronunciation and (p.romanization or not non_latin) for p in book.phrases),

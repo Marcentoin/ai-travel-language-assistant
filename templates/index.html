@@ -3,51 +3,99 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Chat with an AI travel phrasebook: the phrases you need in the local language, with pronunciation and audio.">
+  <meta name="theme-color" content="#0f6e6e">
   <title>AI Travel Language Assistant</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗺️</text></svg>">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
 </head>
 <body>
-  <header>
-    <h1>AI Travel Language Assistant</h1>
-    <p>Describe a travel situation and get the phrases you need, with translations and pronunciation.</p>
-    <span class="badge">Model: {{ model }}</span>
-    {% if demo %}<p class="notice">Demo mode: recorded answers, one per language. Set <code>LLM_API_KEY</code> for live answers.</p>{% endif %}
+  <header class="top">
+    <div>
+      <h1>AI Travel Language Assistant</h1>
+      <p class="tagline">The right words for every situation, in the local language.</p>
+    </div>
+    <span id="model" class="badge"></span>
   </header>
 
+  <section class="where" aria-label="Where you are">
+    <div class="field wide">
+      <label for="country">I am in</label>
+      <div class="inline">
+        <select id="country"><option value="">Choose a country…</option></select>
+        <button id="locate" type="button" class="secondary" title="Detect my country and region">📍 Locate me</button>
+      </div>
+    </div>
+    <div class="field">
+      <label for="language">Language</label>
+      <select id="language"></select>
+    </div>
+    <div class="field">
+      <label for="politeness">Tone</label>
+      <select id="politeness">
+        <option value="casual">Casual</option>
+        <option value="polite">Polite</option>
+        <option value="formal">Formal</option>
+      </select>
+    </div>
+    <p id="place" class="place" hidden></p>
+  </section>
+
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button type="button" role="tab" id="tab-chat" aria-controls="chat" aria-selected="true"><span aria-hidden="true">💬</span> Chat</button>
+    <button type="button" role="tab" id="tab-essentials" aria-controls="essentials" aria-selected="false"><span aria-hidden="true">⭐</span> Essentials</button>
+    <button type="button" role="tab" id="tab-phrasebook" aria-controls="phrasebook" aria-selected="false"><span aria-hidden="true">📖</span> Phrasebook</button>
+    <button type="button" role="tab" id="tab-saved" aria-controls="saved" aria-selected="false"><span aria-hidden="true">🔖</span> <span>Saved <span id="saved-count" class="count"></span></span></button>
+  </nav>
+
   <main>
-    <form id="form">
-      <label for="situation">Travel situation</label>
-      <textarea id="situation" name="situation" maxlength="300" rows="2" required
-                placeholder="e.g. Ordering vegetarian food at a small restaurant"></textarea>
-      <div class="chips">
-        {% for example in examples %}<button type="button" class="chip">{{ example }}</button>{% endfor %}
-      </div>
-      <div class="row">
-        <label>Language
-          <select name="language">
-            {% for name in languages %}<option{% if name == "Japanese" %} selected{% endif %}>{{ name }}</option>{% endfor %}
-          </select>
-        </label>
-        <label>Politeness
-          <select name="politeness"><option>casual</option><option selected>polite</option><option>formal</option></select>
-        </label>
-        <label>Phrases
-          <input type="number" name="count" min="3" max="10" value="6">
-        </label>
-      </div>
-      <button type="submit" class="primary">Get phrases</button>
-    </form>
+    <section id="chat" class="panel" role="tabpanel" aria-labelledby="tab-chat">
+      <div id="log" class="log" aria-live="polite"></div>
+      <div id="suggestions" class="chips" aria-label="Suggestions"></div>
+      <form id="composer" class="composer">
+        <textarea id="message" rows="1" maxlength="500" aria-label="Your message"
+                  placeholder="Describe your situation…"></textarea>
+        <button type="button" id="mic" class="icon" hidden aria-label="Speak your message" title="Speak">🎤</button>
+        <button type="submit" class="primary">Send</button>
+      </form>
+      <button type="button" id="clear" class="link">Start a new conversation</button>
+    </section>
 
-    <p id="status" role="status"></p>
+    <section id="essentials" class="panel" role="tabpanel" aria-labelledby="tab-essentials" hidden>
+      <h2 id="essentials-title">Essential phrases</h2>
+      <p class="hint">The basics every traveller needs. Tap 🔊 to hear them and ☆ to keep them.</p>
+      <div id="essentials-list"></div>
+    </section>
 
-    <section id="results" hidden>
-      <h2 id="title"></h2>
-      <ol id="phrases"></ol>
-      <h3>Cultural tips</h3>
-      <ul id="tips"></ul>
+    <section id="phrasebook" class="panel" role="tabpanel" aria-labelledby="tab-phrasebook" hidden>
+      <form id="situation-form" class="situation">
+        <input id="situation" maxlength="300" required aria-label="Travel situation"
+               placeholder="Describe any situation, e.g. renting a scooter">
+        <button type="submit" class="primary">Get phrases</button>
+      </form>
+      <div id="topics" class="topics"></div>
+      <div id="book" class="book"></div>
+    </section>
+
+    <section id="saved" class="panel" role="tabpanel" aria-labelledby="tab-saved" hidden>
+      <h2>Saved phrases</h2>
+      <p class="hint">Kept on this device, so they stay available without the model.</p>
+      <div id="saved-list"></div>
     </section>
   </main>
 
-  <script src="{{ url_for('static', filename='app.js') }}"></script>
+  <footer>
+    AI-generated phrases can contain mistakes: check anything important (allergies, medicine) with a local.
+    Location lookup © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors.
+  </footer>
+
+  <dialog id="show" aria-labelledby="show-text">
+    <p id="show-text" class="big" dir="auto"></p>
+    <p id="show-roman" class="romanization"></p>
+    <p id="show-english" class="english"></p>
+    <button type="button" id="show-close" class="primary">Close</button>
+  </dialog>
+  <div id="toast" class="toast" role="status" hidden></div>
 </body>
 </html>

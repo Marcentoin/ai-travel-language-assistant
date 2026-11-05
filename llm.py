@@ -21,12 +21,12 @@ class LLMError(RuntimeError):
     """The language model could not be reached or refused the request."""
 
 
-def load_dotenv(path: str | Path = ".env") -> None:
+def load_dotenv(path: str | Path = Path(__file__).with_name(".env")) -> None:
     """Minimal .env reader (KEY=VALUE lines), so no extra dependency is needed."""
     path = Path(path)
     if not path.exists():
         return
-    for line in path.read_text(encoding="utf-8").splitlines():
+    for line in path.read_text(encoding="utf-8-sig").splitlines():  # utf-8-sig: Notepad may add a BOM
         line = line.strip()
         if line and not line.startswith("#") and "=" in line:
             key, value = line.split("=", 1)
@@ -68,7 +68,7 @@ class DemoClient:
         self.answers: dict[str, str] = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
 
     def complete(self, messages: list[dict]) -> str:
-        prompt = messages[-1]["content"]
+        prompt = "\n".join(message["content"] for message in messages)
         for language, answer in self.answers.items():
             if f"Target language: {language}\n" in prompt:
                 return answer
